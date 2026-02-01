@@ -5,6 +5,9 @@ set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CDINFO_PATH="$SCRIPT_DIR/cd-info.sh"
+SKILL_DIR="$SCRIPT_DIR/skills/cdinfo"
+CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
+CODEX_SKILLS_DIR="$HOME/.codex/skills"
 SOURCE_LINE="source \"$CDINFO_PATH\""
 MARKER="# cd-info"
 
@@ -62,6 +65,34 @@ install_to_config() {
     print_success "Added cd-info to $config_file"
 }
 
+# Function to install AI coding assistant skill
+install_skill() {
+    local skills_dir="$1"
+    local name="$2"
+    local dest_dir="$skills_dir/cdinfo"
+
+    if [[ ! -d "$SKILL_DIR" ]]; then
+        print_warning "Skill directory not found at $SKILL_DIR, skipping..."
+        return 1
+    fi
+
+    # Create skills directory if it doesn't exist
+    if [[ ! -d "$skills_dir" ]]; then
+        mkdir -p "$skills_dir"
+        print_status "Created $skills_dir"
+    fi
+
+    # Check if skill already exists
+    if [[ -d "$dest_dir" ]]; then
+        print_status "Updating existing skill at $dest_dir"
+        rm -rf "$dest_dir"
+    fi
+
+    # Copy the skill directory
+    cp -r "$SKILL_DIR" "$dest_dir"
+    print_success "Installed $name skill to $dest_dir/"
+}
+
 # Detect available shells and install
 installed=0
 
@@ -83,6 +114,26 @@ if [[ $installed -eq 0 ]]; then
 fi
 
 echo ""
+print_success "Shell integration complete!"
+
+# Ask about AI assistant skill installation
+echo ""
+print_status "Would you like to install skills for AI coding assistants?"
+echo "         This teaches Claude Code and Codex how to create .cdinfo files."
+
+read -p "         Install Claude Code skill (~/.claude/skills)? [y/N] " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    install_skill "$CLAUDE_SKILLS_DIR" "Claude Code"
+fi
+echo ""
+
+read -p "         Install Codex skill (~/.codex/skills)? [y/N] " -n 1 -r
+echo ""
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    install_skill "$CODEX_SKILLS_DIR" "Codex"
+fi
+
 print_success "Installation complete!"
 echo ""
 echo "To start using cd-info immediately, run:"
