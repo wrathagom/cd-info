@@ -1,0 +1,15 @@
+# ============================================================
+# This file is used by cd-info to display directory information
+# Learn more: https://github.com/wrathagom/cd-info
+# ============================================================
+# --- END CD-INFO HEADER ---
+
+Quick Commands:
+  npm install    - Install dependencies
+  npm run dev    - Start development server
+  npm test       - Run tests
+  npm run build  - Build for production
+
+Useful Links:
+  Docs:   https://example.com/docs
+  Jira:   https://example.atlassian.net/browse/PROJ
