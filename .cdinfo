@@ -1,0 +1,24 @@
+# ============================================================
+# This file is used by cd-info to display directory information
+# Learn more: https://github.com/wrathagom/cd-info
+# ============================================================
+# --- END CD-INFO HEADER ---
+ _______  ______      _________ _        _______  _______
+(  ____ \(  __  \     \__   __/( (    /|(  ____ \(  ___  )
+| (    \/| (  \  )       ) (   |  \  ( || (    \/| (   ) |
+| |      | |   ) | _____ | |   |   \ | || (__    | |   | |
+| |      | |   | |(_____)| |   | (\ \) ||  __)   | |   | |
+| |      | |   ) |       | |   | | \   || (      | |   | |
+| (____/\| (__/  )    ___) (___| )  \  || )      | (___) |
+(_______/(______/     \_______/|/    )_)|/       (_______)
+
+# Getting Started
+  - `source ./cd-info.sh`   Try it in current shell
+  - `./install.sh`          Install permanently
+
+# Test it
+  - `cd .. && cd cd-info`   Should display this box!
+
+# Links
+  - Repo: https://github.com/wrathagom/cd-info
+
