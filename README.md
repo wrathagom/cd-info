@@ -41,6 +41,10 @@ Or manually add to your `~/.bashrc` or `~/.zshrc`:
 source /path/to/cd-info/cd-info.sh
 ```
 
+## Agent Skill
+
+This repo includes an agent skill named `cdinfo` (see `AGENTS.md`) for AI assistants to create `.cdinfo` files for projects.
+
 ## Usage
 
 Create a `.cdinfo` file in any directory using the init command:
