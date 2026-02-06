@@ -26,6 +26,7 @@ _cdinfo_display() {
     local line
 
     while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line%$'\r'}"
         if [[ $found_marker -eq 1 ]]; then
             content+="$line"$'\n'
         elif [[ "$line" == "$CDINFO_HEADER_MARKER" ]]; then
