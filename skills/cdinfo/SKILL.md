@@ -56,7 +56,7 @@ The cd-info tool automatically highlights:
    - Quick commands section with the most frequently used commands
    - Additional sections as relevant (Development, Testing, Deployment, Links)
 
-3. Keep it concise - show only the most useful 5-10 commands
+3. Keep it concise - show only the most useful 3-5 commands
 
 4. Use proper indentation (2 spaces) for list items to align nicely
 
