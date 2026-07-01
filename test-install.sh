@@ -35,5 +35,39 @@ echo "Test 3: active_profile default"
 [[ "$(HOME=/tmp/xyz active_profile ".claude" "")" == "/tmp/xyz/.claude" ]] \
     && pass "returns HOME default" || fail "did not return HOME default"
 
+# Test 4: discover_profiles globs directories, excludes files
+echo "Test 4: discover_profiles globbing"
+THOME="$(mktemp -d)"
+mkdir -p "$THOME/.claude" "$THOME/.claude-work" "$THOME/.claude-personal"
+touch "$THOME/.claude.json"
+out="$(HOME="$THOME" discover_profiles ".claude" "")"
+count="$(printf '%s\n' "$out" | grep -c .)"
+[[ "$count" -eq 3 ]] && pass "found 3 dirs, excluded .claude.json" \
+    || fail "expected 3 candidates, got $count"
+
+# Test 5: discover_profiles appends env value when outside the glob
+echo "Test 5: discover_profiles appends env target"
+out="$(HOME="$THOME" discover_profiles ".claude" "/elsewhere/claude")"
+count="$(printf '%s\n' "$out" | grep -c .)"
+printf '%s\n' "$out" | grep -q "^/elsewhere/claude$" \
+    && [[ "$count" -eq 4 ]] && pass "appended external env target" \
+    || fail "did not append env target (count=$count)"
+
+# Test 6: discover_profiles does not duplicate an env value already globbed
+echo "Test 6: discover_profiles no duplicate"
+out="$(HOME="$THOME" discover_profiles ".claude" "$THOME/.claude-work")"
+count="$(printf '%s\n' "$out" | grep -c .)"
+[[ "$count" -eq 3 ]] && pass "no duplicate for globbed env target" \
+    || fail "expected 3, got $count"
+
+# Test 7: discover_profiles prints nothing when no matches
+echo "Test 7: discover_profiles empty"
+EMPTYHOME="$(mktemp -d)"
+out="$(HOME="$EMPTYHOME" discover_profiles ".claude" "")"
+[[ -z "$out" ]] && pass "empty output when no profiles" \
+    || fail "expected empty output, got: $out"
+
+rm -rf "$THOME" "$EMPTYHOME"
+
 echo ""
 echo "=== All install tests passed ==="

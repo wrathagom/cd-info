@@ -95,6 +95,31 @@ active_profile() {
     fi
 }
 
+# Prints candidate profile directories, one per line (none if no matches).
+# $1 = base name (e.g. ".claude"), $2 = env var value (may be empty)
+discover_profiles() {
+    local base="$1"
+    local env_value="$2"
+    local -a found=()
+    local d
+
+    for d in "$HOME/$base"*; do
+        [[ -d "$d" ]] && found+=("$d")
+    done
+
+    if [[ -n "$env_value" ]]; then
+        local present=0 f
+        for f in "${found[@]}"; do
+            [[ "$f" == "$env_value" ]] && present=1 && break
+        done
+        [[ $present -eq 0 ]] && found+=("$env_value")
+    fi
+
+    if [[ ${#found[@]} -gt 0 ]]; then
+        printf '%s\n' "${found[@]}"
+    fi
+}
+
 main() {
     set -e
 
