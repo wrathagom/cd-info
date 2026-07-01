@@ -1,13 +1,9 @@
 #!/usr/bin/env bash
 # install.sh - Install cd-info by adding source line to shell config files
 
-set -e
-
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CDINFO_PATH="$SCRIPT_DIR/cd-info.sh"
 SKILL_DIR="$SCRIPT_DIR/skills/cdinfo"
-CLAUDE_SKILLS_DIR="$HOME/.claude/skills"
-CODEX_SKILLS_DIR="$HOME/.codex/skills"
 SOURCE_LINE="source \"$CDINFO_PATH\""
 MARKER="# cd-info"
 
@@ -33,12 +29,6 @@ print_warning() {
 print_error() {
     echo -e "${RED}[cd-info]${NC} $1"
 }
-
-# Check if cd-info.sh exists
-if [[ ! -f "$CDINFO_PATH" ]]; then
-    print_error "cd-info.sh not found at $CDINFO_PATH"
-    exit 1
-fi
 
 # Function to install to a config file
 install_to_config() {
@@ -93,54 +83,67 @@ install_skill() {
     print_success "Installed $name skill to $dest_dir/"
 }
 
-# Detect available shells and install
-installed=0
+main() {
+    set -e
 
-# Check for bash
-if [[ -f "$HOME/.bashrc" ]] || command -v bash &>/dev/null; then
-    install_to_config "$HOME/.bashrc" "bash"
-    installed=1
+    # Check if cd-info.sh exists
+    if [[ ! -f "$CDINFO_PATH" ]]; then
+        print_error "cd-info.sh not found at $CDINFO_PATH"
+        exit 1
+    fi
+
+    # Detect available shells and install
+    local installed=0
+
+    if [[ -f "$HOME/.bashrc" ]] || command -v bash &>/dev/null; then
+        install_to_config "$HOME/.bashrc" "bash"
+        installed=1
+    fi
+
+    if [[ -f "$HOME/.zshrc" ]] || command -v zsh &>/dev/null; then
+        install_to_config "$HOME/.zshrc" "zsh"
+        installed=1
+    fi
+
+    if [[ $installed -eq 0 ]]; then
+        print_error "No supported shell config found (.bashrc or .zshrc)"
+        exit 1
+    fi
+
+    echo ""
+    print_success "Shell integration complete!"
+
+    # Ask about AI assistant skill installation
+    echo ""
+    print_status "Would you like to install skills for AI coding assistants?"
+    echo "         This teaches Claude Code and Codex how to create .cdinfo files."
+
+    read -p "         Install Claude Code skill? [y/N] " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        select_and_install_skill ".claude" "${CLAUDE_CONFIG_DIR:-}" "Claude Code"
+    fi
+    echo ""
+
+    read -p "         Install Codex skill? [y/N] " -n 1 -r
+    echo ""
+    if [[ $REPLY =~ ^[Yy]$ ]]; then
+        select_and_install_skill ".codex" "${CODEX_HOME:-}" "Codex"
+    fi
+
+    print_success "Installation complete!"
+    echo ""
+    echo "To start using cd-info immediately, run:"
+    echo ""
+    echo "    source $CDINFO_PATH"
+    echo ""
+    echo "Or restart your terminal."
+    echo ""
+    echo "Create a .cdinfo file in any directory to display info when you cd into it."
+    echo "See examples/.cdinfo.example for the file format."
+}
+
+# Run main only when executed directly, not when sourced (e.g. by tests)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
 fi
-
-# Check for zsh
-if [[ -f "$HOME/.zshrc" ]] || command -v zsh &>/dev/null; then
-    install_to_config "$HOME/.zshrc" "zsh"
-    installed=1
-fi
-
-if [[ $installed -eq 0 ]]; then
-    print_error "No supported shell config found (.bashrc or .zshrc)"
-    exit 1
-fi
-
-echo ""
-print_success "Shell integration complete!"
-
-# Ask about AI assistant skill installation
-echo ""
-print_status "Would you like to install skills for AI coding assistants?"
-echo "         This teaches Claude Code and Codex how to create .cdinfo files."
-
-read -p "         Install Claude Code skill (~/.claude/skills)? [y/N] " -n 1 -r
-echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    install_skill "$CLAUDE_SKILLS_DIR" "Claude Code"
-fi
-echo ""
-
-read -p "         Install Codex skill (~/.codex/skills)? [y/N] " -n 1 -r
-echo ""
-if [[ $REPLY =~ ^[Yy]$ ]]; then
-    install_skill "$CODEX_SKILLS_DIR" "Codex"
-fi
-
-print_success "Installation complete!"
-echo ""
-echo "To start using cd-info immediately, run:"
-echo ""
-echo "    source $CDINFO_PATH"
-echo ""
-echo "Or restart your terminal."
-echo ""
-echo "Create a .cdinfo file in any directory to display info when you cd into it."
-echo "See examples/.cdinfo.example for the file format."
