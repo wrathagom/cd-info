@@ -25,5 +25,15 @@ echo ""
 echo "Test 1: install.sh is sourceable without running main"
 [[ "$SOURCE_GUARD_OK" == "1" ]] && pass "sourced without side effects" || fail "main ran on source"
 
+# Test 2: active_profile returns env value when set
+echo "Test 2: active_profile with env value"
+[[ "$(active_profile ".claude" "/x/.claude-work")" == "/x/.claude-work" ]] \
+    && pass "returns env value" || fail "did not return env value"
+
+# Test 3: active_profile falls back to \$HOME/<base> when env empty
+echo "Test 3: active_profile default"
+[[ "$(HOME=/tmp/xyz active_profile ".claude" "")" == "/tmp/xyz/.claude" ]] \
+    && pass "returns HOME default" || fail "did not return HOME default"
+
 echo ""
 echo "=== All install tests passed ==="

@@ -83,6 +83,18 @@ install_skill() {
     print_success "Installed $name skill to $dest_dir/"
 }
 
+# Returns the "active" profile path for a family.
+# $1 = base name (e.g. ".claude"), $2 = env var value (may be empty)
+active_profile() {
+    local base="$1"
+    local env_value="$2"
+    if [[ -n "$env_value" ]]; then
+        echo "$env_value"
+    else
+        echo "$HOME/$base"
+    fi
+}
+
 main() {
     set -e
 
