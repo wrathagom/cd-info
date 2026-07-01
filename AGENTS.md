@@ -19,6 +19,7 @@ cd-info/
 ├── cd-info.sh      # Main shell function (source this)
 ├── install.sh      # Adds source line to ~/.bashrc and ~/.zshrc
 ├── test.sh         # Test suite
+├── test-install.sh # install.sh helper tests
 ├── README.md       # User documentation
 ├── AGENTS.md       # This file
 ├── .cdinfo         # Example for this repo
@@ -43,7 +44,8 @@ cd-info/
 
 ### Testing
 
-Run `./test.sh` after any changes. Tests cover:
+Run `./test.sh` after any changes (covers `cd-info.sh`). Run `bash test-install.sh`
+to test `install.sh` helper functions. Tests cover:
 - Syntax validation (bash and zsh)
 - cd behavior (with/without .cdinfo, failure cases)
 - Exit code preservation
