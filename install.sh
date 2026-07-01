@@ -120,6 +120,46 @@ discover_profiles() {
     fi
 }
 
+# Converts a selection string into 1-based indices, one per line.
+# $1 = raw input, $2 = candidate count, $3 = default index (used when empty).
+# Prints selected indices in input order (deduped). Returns 1 on invalid input.
+parse_selection() {
+    local input="$1"
+    local count="$2"
+    local default_idx="$3"
+    local -a out=()
+
+    # Normalize commas to spaces
+    input="$(echo "$input" | tr ',' ' ')"
+
+    # Empty (only whitespace) -> default
+    if [[ -z "${input// }" ]]; then
+        echo "$default_idx"
+        return 0
+    fi
+
+    if [[ "${input// }" == "all" ]]; then
+        local i
+        for ((i = 1; i <= count; i++)); do out+=("$i"); done
+        printf '%s\n' "${out[@]}"
+        return 0
+    fi
+
+    local tok
+    for tok in $input; do
+        [[ "$tok" =~ ^[0-9]+$ ]] || return 1
+        (( tok >= 1 && tok <= count )) || return 1
+        local seen=0 x
+        for x in "${out[@]}"; do
+            [[ "$x" == "$tok" ]] && seen=1 && break
+        done
+        [[ $seen -eq 0 ]] && out+=("$tok")
+    done
+
+    printf '%s\n' "${out[@]}"
+    return 0
+}
+
 main() {
     set -e
 

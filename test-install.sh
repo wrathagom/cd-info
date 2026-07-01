@@ -69,5 +69,40 @@ out="$(HOME="$EMPTYHOME" discover_profiles ".claude" "")"
 
 rm -rf "$THOME" "$EMPTYHOME"
 
+# Test 8: parse_selection empty input returns default index
+echo "Test 8: parse_selection default"
+[[ "$(parse_selection "" 4 2)" == "2" ]] && pass "empty -> default" \
+    || fail "empty did not return default"
+
+# Test 9: parse_selection 'all' expands to every index
+echo "Test 9: parse_selection all"
+[[ "$(parse_selection "all" 3 1)" == $'1\n2\n3' ]] && pass "all expands" \
+    || fail "all did not expand"
+
+# Test 10: parse_selection space- and comma-separated numbers
+echo "Test 10: parse_selection numbers"
+[[ "$(parse_selection "1 3" 4 1)" == $'1\n3' ]] && pass "space separated" \
+    || fail "space separated failed"
+[[ "$(parse_selection "1,3" 4 1)" == $'1\n3' ]] && pass "comma separated" \
+    || fail "comma separated failed"
+
+# Test 11: parse_selection dedupes repeats
+echo "Test 11: parse_selection dedupe"
+[[ "$(parse_selection "2 2" 4 1)" == "2" ]] && pass "dedupes" \
+    || fail "did not dedupe"
+
+# Test 12: parse_selection rejects out-of-range and non-numeric
+echo "Test 12: parse_selection invalid input"
+if parse_selection "9" 4 1 >/dev/null 2>&1; then
+    fail "accepted out-of-range"
+else
+    pass "rejected out-of-range"
+fi
+if parse_selection "x" 4 1 >/dev/null 2>&1; then
+    fail "accepted non-numeric"
+else
+    pass "rejected non-numeric"
+fi
+
 echo ""
 echo "=== All install tests passed ==="
