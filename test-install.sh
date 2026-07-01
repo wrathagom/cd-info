@@ -10,10 +10,10 @@ NC='\033[0m'
 pass() { echo -e "${GREEN}PASS${NC}: $1"; }
 fail() { echo -e "${RED}FAIL${NC}: $1"; exit 1; }
 
-# Sentinel: set before sourcing. If main() runs on source, it will call
-# `exit` or print the completion banner; we assert neither happened by
-# checking a marker variable install.sh must NOT clobber.
-SOURCE_GUARD_OK=1
+# Track temp dirs so they are cleaned up on any exit path (including fail()).
+TMPDIRS=()
+mktmp() { local d; d="$(mktemp -d)"; TMPDIRS+=("$d"); echo "$d"; }
+trap 'rm -rf "${TMPDIRS[@]}"' EXIT
 
 # Source install.sh for its functions. The source guard must prevent main().
 source "$SCRIPT_DIR/install.sh"
@@ -21,9 +21,13 @@ source "$SCRIPT_DIR/install.sh"
 echo "=== install.sh tests ==="
 echo ""
 
-# Test 1: sourcing does not execute main()
+# Test 1: sourcing does not execute main().
+# Source in a subshell under a sandboxed HOME and assert it produces no output.
+# If the guard were removed, main() would run and print status/banner lines
+# (or block on prompts), so this fails when the guard is broken.
 echo "Test 1: install.sh is sourceable without running main"
-[[ "$SOURCE_GUARD_OK" == "1" ]] && pass "sourced without side effects" || fail "main ran on source"
+out="$(HOME="$(mktmp)" bash -c 'source "'"$SCRIPT_DIR"'/install.sh"' </dev/null 2>&1)"
+[[ -z "$out" ]] && pass "sourced without side effects" || fail "main ran on source: $out"
 
 # Test 2: active_profile returns env value when set
 echo "Test 2: active_profile with env value"
@@ -37,7 +41,7 @@ echo "Test 3: active_profile default"
 
 # Test 4: discover_profiles globs directories, excludes files
 echo "Test 4: discover_profiles globbing"
-THOME="$(mktemp -d)"
+THOME="$(mktmp)"
 mkdir -p "$THOME/.claude" "$THOME/.claude-work" "$THOME/.claude-personal"
 touch "$THOME/.claude.json"
 out="$(HOME="$THOME" discover_profiles ".claude" "")"
@@ -60,9 +64,16 @@ count="$(printf '%s\n' "$out" | grep -c .)"
 [[ "$count" -eq 3 ]] && pass "no duplicate for globbed env target" \
     || fail "expected 3, got $count"
 
+# Test 6b: discover_profiles ignores a trailing slash on the env value
+echo "Test 6b: discover_profiles trailing-slash env no duplicate"
+out="$(HOME="$THOME" discover_profiles ".claude" "$THOME/.claude-work/")"
+count="$(printf '%s\n' "$out" | grep -c .)"
+[[ "$count" -eq 3 ]] && pass "trailing slash not duplicated" \
+    || fail "expected 3, got $count"
+
 # Test 7: discover_profiles prints nothing when no matches
 echo "Test 7: discover_profiles empty"
-EMPTYHOME="$(mktemp -d)"
+EMPTYHOME="$(mktmp)"
 out="$(HOME="$EMPTYHOME" discover_profiles ".claude" "")"
 [[ -z "$out" ]] && pass "empty output when no profiles" \
     || fail "expected empty output, got: $out"
@@ -106,7 +117,7 @@ fi
 
 # Test 13: select_and_install_skill installs into multiple selected profiles
 echo "Test 13: picker installs to selected profiles"
-THOME="$(mktemp -d)"
+THOME="$(mktmp)"
 mkdir -p "$THOME/.claude" "$THOME/.claude-work"
 echo "1 2" | HOME="$THOME" select_and_install_skill ".claude" "" "Claude Code" >/dev/null 2>&1
 [[ -d "$THOME/.claude/skills/cdinfo" && -d "$THOME/.claude-work/skills/cdinfo" ]] \
@@ -116,7 +127,7 @@ rm -rf "$THOME"
 
 # Test 14: empty-input selects the pre-selected active (env) profile only
 echo "Test 14: picker default selects active profile"
-THOME="$(mktemp -d)"
+THOME="$(mktmp)"
 mkdir -p "$THOME/.claude" "$THOME/.claude-work"
 # env value points at .claude-work, so Enter (empty) should pick only that one
 printf '\n' | HOME="$THOME" select_and_install_skill ".claude" "$THOME/.claude-work" "Claude Code" >/dev/null 2>&1
@@ -127,7 +138,7 @@ rm -rf "$THOME"
 
 # Test 15: fallback offers to create default when no profiles exist
 echo "Test 15: fallback creates default profile"
-THOME="$(mktemp -d)"
+THOME="$(mktmp)"
 echo "y" | HOME="$THOME" select_and_install_skill ".claude" "" "Claude Code" >/dev/null 2>&1
 [[ -d "$THOME/.claude/skills/cdinfo" ]] && pass "fallback created default" \
     || fail "fallback did not create default"

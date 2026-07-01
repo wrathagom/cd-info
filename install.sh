@@ -87,7 +87,7 @@ install_skill() {
 # $1 = base name (e.g. ".claude"), $2 = env var value (may be empty)
 active_profile() {
     local base="$1"
-    local env_value="$2"
+    local env_value="${2%/}"
     if [[ -n "$env_value" ]]; then
         echo "$env_value"
     else
@@ -99,7 +99,7 @@ active_profile() {
 # $1 = base name (e.g. ".claude"), $2 = env var value (may be empty)
 discover_profiles() {
     local base="$1"
-    local env_value="$2"
+    local env_value="${2%/}"
     local -a found=()
     local d
 
@@ -130,7 +130,7 @@ parse_selection() {
     local -a out=()
 
     # Normalize commas to spaces
-    input="$(echo "$input" | tr ',' ' ')"
+    input="${input//,/ }"
 
     # Empty (only whitespace) -> default
     if [[ -z "${input// }" ]]; then
