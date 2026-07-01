@@ -41,6 +41,18 @@ Or manually add to your `~/.bashrc` or `~/.zshrc`:
 source /path/to/cd-info/cd-info.sh
 ```
 
+### AI assistant skills
+
+The installer can also install a skill that teaches Claude Code and Codex how to
+create `.cdinfo` files. It detects your profile directories automatically:
+
+- Any `~/.claude*` directory is offered in a picker (so multi-profile / "multi-claude"
+  setups work), and you can install into one, several, or all of them.
+- `$CLAUDE_CONFIG_DIR` and `$CODEX_HOME` are honored: the active profile is
+  pre-selected as the default, and a custom path outside `~/.claude*` is included.
+- On a fresh machine with no profiles, it offers to create the default
+  (`~/.claude` / `~/.codex`, or the env-var path if set).
+
 ## Agent Skill
 
 This repo includes an agent skill named `cdinfo` (see `AGENTS.md`) for AI assistants to create `.cdinfo` files for projects.
