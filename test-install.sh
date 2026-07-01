@@ -104,5 +104,34 @@ else
     pass "rejected non-numeric"
 fi
 
+# Test 13: select_and_install_skill installs into multiple selected profiles
+echo "Test 13: picker installs to selected profiles"
+THOME="$(mktemp -d)"
+mkdir -p "$THOME/.claude" "$THOME/.claude-work"
+echo "1 2" | HOME="$THOME" select_and_install_skill ".claude" "" "Claude Code" >/dev/null 2>&1
+[[ -d "$THOME/.claude/skills/cdinfo" && -d "$THOME/.claude-work/skills/cdinfo" ]] \
+    && pass "installed into both selected profiles" \
+    || fail "did not install into both profiles"
+rm -rf "$THOME"
+
+# Test 14: empty-input selects the pre-selected active (env) profile only
+echo "Test 14: picker default selects active profile"
+THOME="$(mktemp -d)"
+mkdir -p "$THOME/.claude" "$THOME/.claude-work"
+# env value points at .claude-work, so Enter (empty) should pick only that one
+printf '\n' | HOME="$THOME" select_and_install_skill ".claude" "$THOME/.claude-work" "Claude Code" >/dev/null 2>&1
+[[ -d "$THOME/.claude-work/skills/cdinfo" && ! -d "$THOME/.claude/skills/cdinfo" ]] \
+    && pass "default installed only active profile" \
+    || fail "default selection wrong"
+rm -rf "$THOME"
+
+# Test 15: fallback offers to create default when no profiles exist
+echo "Test 15: fallback creates default profile"
+THOME="$(mktemp -d)"
+echo "y" | HOME="$THOME" select_and_install_skill ".claude" "" "Claude Code" >/dev/null 2>&1
+[[ -d "$THOME/.claude/skills/cdinfo" ]] && pass "fallback created default" \
+    || fail "fallback did not create default"
+rm -rf "$THOME"
+
 echo ""
 echo "=== All install tests passed ==="

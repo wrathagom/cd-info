@@ -160,6 +160,67 @@ parse_selection() {
     return 0
 }
 
+# Interactive: discover profiles for a family, prompt for selection, and
+# install the skill into each selected dir's skills/ subdir.
+# $1 = base name, $2 = env var value, $3 = display name
+select_and_install_skill() {
+    local base="$1"
+    local env_value="$2"
+    local name="$3"
+
+    local active
+    active="$(active_profile "$base" "$env_value")"
+
+    local -a candidates=()
+    local line
+    while IFS= read -r line; do
+        [[ -n "$line" ]] && candidates+=("$line")
+    done < <(discover_profiles "$base" "$env_value")
+
+    # Fallback: no candidates found
+    if [[ ${#candidates[@]} -eq 0 ]]; then
+        print_warning "No $name profiles found."
+        read -p "         Create and install into $active? [y/N] " -n 1 -r
+        echo ""
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            install_skill "$active/skills" "$name"
+        fi
+        return 0
+    fi
+
+    # Determine default index (position of active profile, else 1)
+    local default_idx=1 i
+    for i in "${!candidates[@]}"; do
+        if [[ "${candidates[$i]}" == "$active" ]]; then
+            default_idx=$((i + 1))
+            break
+        fi
+    done
+
+    print_status "Select $name profile(s) to install the cdinfo skill into:"
+    for i in "${!candidates[@]}"; do
+        local num=$((i + 1))
+        local marker=""
+        [[ $num -eq $default_idx ]] && marker="  *  (active, default)"
+        echo "           $num) ${candidates[$i]}$marker"
+    done
+
+    local selection raw
+    while true; do
+        read -p "         Enter numbers (space/comma separated), 'all', or Enter for default: " -r raw
+        if selection="$(parse_selection "$raw" "${#candidates[@]}" "$default_idx")"; then
+            break
+        fi
+        print_warning "Invalid selection, try again."
+    done
+
+    local idx
+    while IFS= read -r idx; do
+        [[ -z "$idx" ]] && continue
+        install_skill "${candidates[$((idx - 1))]}/skills" "$name"
+    done <<< "$selection"
+}
+
 main() {
     set -e
 
